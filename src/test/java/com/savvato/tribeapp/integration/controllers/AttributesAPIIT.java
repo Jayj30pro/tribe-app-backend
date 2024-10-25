@@ -156,21 +156,22 @@ public class AttributesAPIIT implements UserTestConstants, PhraseTestConstants {
         attributesRequest.noun = NOUN1_WORD;
         attributesRequest.preposition = PREPOSITION1_WORD;
         String notificationContent = "Your attribute has been approved!";
+
+        AttributesApplyPhraseToUserDTO expectedDTO = AttributesApplyPhraseToUserDTO
+                .builder()
+                .isApproved(true)
+                .isRejected(false)
+                .isInReview(false)
+                .build();
+
         when(phraseService.isPhraseValid(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(true);
         when(phraseService.applyPhraseToUser(
                 anyLong(), anyString(), anyString(), anyString(), anyString()))
-                .thenReturn(true);
+                .thenReturn(expectedDTO);
         when(notificationService.createNotification(
                 any(NotificationType.class), anyLong(), anyString(), anyString()))
                 .thenReturn(null);
-
-        final boolean boolResponse = true;
-        when(GenericResponseService.createDTO(
-                boolResponse))
-                .thenReturn(GenericResponseDTO.builder()
-                        .booleanMessage(boolResponse)
-                        .build());
 
         ArgumentCaptor<NotificationType> notificationTypeCaptor =
                 ArgumentCaptor.forClass(NotificationType.class);
@@ -178,7 +179,7 @@ public class AttributesAPIIT implements UserTestConstants, PhraseTestConstants {
         ArgumentCaptor<String> notificationTypeNameCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> notificationContentCaptor = ArgumentCaptor.forClass(String.class);
 
-        String expectedMessage = "{\"booleanMessage\":" + true + "}";
+        String expectedMessage = "{\"isApproved\": true, \"isRejected\": false, \"isInReview\": false}";
 
         this.mockMvc
                 .perform(
@@ -219,29 +220,31 @@ public class AttributesAPIIT implements UserTestConstants, PhraseTestConstants {
         attributesRequest.noun = NOUN1_WORD;
         attributesRequest.preposition = PREPOSITION1_WORD;
 
+        AttributesApplyPhraseToUserDTO expectedDTO = AttributesApplyPhraseToUserDTO
+                .builder()
+                .isApproved(false)
+                .isRejected(false)
+                .isInReview(true)
+                .build();
+
         when(phraseService.isPhraseValid(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(true);
         when(phraseService.applyPhraseToUser(
                 anyLong(), anyString(), anyString(), anyString(), anyString()))
-                .thenReturn(false);
+                .thenReturn(expectedDTO);
         when(notificationService.createNotification(
                 any(NotificationType.class), anyLong(), anyString(), anyString()))
                 .thenReturn(null);
-        final boolean boolResponse = false;
-        when(GenericResponseService.createDTO(
-                boolResponse))
-                .thenReturn(GenericResponseDTO.builder()
-                        .booleanMessage(boolResponse)
-                        .build());
+
         ArgumentCaptor<NotificationType> notificationTypeCaptor =
                 ArgumentCaptor.forClass(NotificationType.class);
         ArgumentCaptor<Long> userIdCaptor = ArgumentCaptor.forClass(Long.class);
         ArgumentCaptor<String> notificationTypeNameCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> notificationContentCaptor = ArgumentCaptor.forClass(String.class);
         String notificationContent =
-                "Your attribute was rejected. This attribute is unsuitable and cannot be applied to users.";
+                "Your attribute will be reviewed.";
 
-        String expectedMessage = "{\"booleanMessage\":" + false + "}";
+        String expectedMessage = "{\"isApproved\": false, \"isRejected\": false, \"isInReview\": true}";
 
         this.mockMvc
                 .perform(
@@ -260,11 +263,11 @@ public class AttributesAPIIT implements UserTestConstants, PhraseTestConstants {
                         userIdCaptor.capture(),
                         notificationTypeNameCaptor.capture(),
                         notificationContentCaptor.capture());
-        assertThat(notificationTypeCaptor.getValue()).usingRecursiveComparison().isEqualTo(NotificationType.ATTRIBUTE_REQUEST_REJECTED);
+        assertThat(notificationTypeCaptor.getValue()).usingRecursiveComparison().isEqualTo(NotificationType.ATTRIBUTE_REQUEST_IN_REVIEW);
         assertEquals(userIdCaptor.getValue(), userId);
         assertEquals(
                 notificationTypeNameCaptor.getValue(),
-                NotificationType.ATTRIBUTE_REQUEST_REJECTED.getName());
+                NotificationType.ATTRIBUTE_REQUEST_IN_REVIEW.getName());
         assertEquals(notificationContentCaptor.getValue(), notificationContent);
     }
 
@@ -282,17 +285,20 @@ public class AttributesAPIIT implements UserTestConstants, PhraseTestConstants {
         attributesRequest.noun = NOUN1_WORD;
         attributesRequest.preposition = PREPOSITION1_WORD;
 
+        AttributesApplyPhraseToUserDTO expectedDTO = AttributesApplyPhraseToUserDTO
+                .builder()
+                .isApproved(false)
+                .isRejected(true)
+                .isInReview(false)
+                .build();
+
         when(phraseService.isPhraseValid(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(false);
+        when((phraseService.constructAttributesApplyPhraseToUserDTO(anyBoolean(),anyBoolean(),anyBoolean()))).thenReturn(expectedDTO);
         when(notificationService.createNotification(
                 any(NotificationType.class), anyLong(), anyString(), anyString()))
                 .thenReturn(null);
-        final boolean boolResponse = false;
-        when(GenericResponseService.createDTO(
-                boolResponse))
-                .thenReturn(GenericResponseDTO.builder()
-                        .booleanMessage(boolResponse)
-                        .build());
+
         ArgumentCaptor<NotificationType> notificationTypeCaptor =
                 ArgumentCaptor.forClass(NotificationType.class);
         ArgumentCaptor<Long> userIdCaptor = ArgumentCaptor.forClass(Long.class);
@@ -301,7 +307,7 @@ public class AttributesAPIIT implements UserTestConstants, PhraseTestConstants {
         String notificationContent =
                 "Your attribute was rejected. This attribute is unsuitable and cannot be applied to users.";
 
-        String expectedMessage = "{\"booleanMessage\":" + false + "}";
+        String expectedMessage = "{\"isApproved\": false, \"isRejected\": true, \"isInReview\": false}";
 
         this.mockMvc
                 .perform(
