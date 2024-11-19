@@ -106,8 +106,11 @@ public class AttributesAPIIT implements UserTestConstants, PhraseTestConstants {
                         .build();
         AttributeDTO attributeDTO = AttributeDTO.builder().phrase(phraseDTO).build();
         List<AttributeDTO> expectedAttributes = List.of(attributeDTO);
-        Optional<List<AttributeDTO>> opt = Optional.of(expectedAttributes);
+        Map<String, List<AttributeDTO>> expectedAttributesMap = Map.of("attributes", expectedAttributes);
+
+        Optional<Map<String, List<AttributeDTO>>> opt = Optional.of(expectedAttributesMap);
         when(attributesService.getAttributesByUserId(anyLong())).thenReturn(opt);
+
         MvcResult result =
                 this.mockMvc
                         .perform(
@@ -117,12 +120,11 @@ public class AttributesAPIIT implements UserTestConstants, PhraseTestConstants {
                         .andExpect(status().isOk())
                         .andReturn();
 
-        Type attributeDTOListType = new TypeToken<List<AttributeDTO>>() {
-        }.getType();
+        Type attributeDTOMapType = new TypeToken<Map<String, List<AttributeDTO>>>() {}.getType();
+        Map<String, List<AttributeDTO>> actualAttributesMap = gson.fromJson(
+                result.getResponse().getContentAsString(), attributeDTOMapType);
 
-        List<AttributeDTO> actualAttributes =
-                gson.fromJson(result.getResponse().getContentAsString(), attributeDTOListType);
-        assertThat(actualAttributes).usingRecursiveComparison().isEqualTo(expectedAttributes);
+        assertThat(actualAttributesMap).usingRecursiveComparison().isEqualTo(expectedAttributesMap);
     }
 
     @Test
